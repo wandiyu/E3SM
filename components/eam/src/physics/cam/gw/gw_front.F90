@@ -7,6 +7,8 @@ module gw_front
 
 use gw_utils, only: r8, btype
 use gw_common, only: pver, pgwv, cref
+use physconst,     only:  pi, rearth, gravit, omega 
+use phys_grid,       only: get_area_p
 
 implicit none
 private
@@ -18,7 +20,7 @@ public :: gw_cm_src
 ! Only public for testing
 public :: gw_front_project_winds
 public :: gw_front_gw_sources
-
+public :: gw_rossby_radius
 ! Tuneable settings.
 
 ! Frontogenesis function critical threshold.
@@ -176,6 +178,43 @@ subroutine gw_front_gw_sources(ncol, ngwv, kbot, frontgf, tau)
   end do
 
 end subroutine gw_front_gw_sources
+
+!==========================================================================
+subroutine gw_rossby_radius(ncol, lat, lchnk, &
+        rossby_radius_index)
+  !------------------------------Arguments--------------------------------
+  ! Column and chunck index.
+  integer, intent(in) :: ncol, lchnk
+  ! Latitudes for each column.
+  real(r8), intent(in) :: lat(ncol)  ! in radian 
+    ! rossby radius index 
+  real(r8), intent(out) :: rossby_radius_index(ncol)
+  !---------------------------Local Storage-------------------------------  
+  ! Column 
+  integer :: i
+  
+ ! depth to calculate the Rossby Radius    
+  real(r8), parameter :: rossby_depth   = 2.0e3_r8
+  ! coriolis parameter
+  real(r8) :: f(ncol)
+  !column area 
+  real(r8) :: column_area(ncol)
+  ! rossby radius 
+  real(r8) :: rossby_radius(ncol) 
+  
+  !---------------------------Calculate the Rossby Radius ratio------------
+  do i = 1,ncol
+      column_area(i) = get_area_p(lchnk,i) * (rearth**2)  ! steradians to m2 
+  end do
+  
+  f = 2 * omega * sin(lat)  ! lat is in radian 
+
+  rossby_radius = sqrt(gravit*rossby_depth)/abs(f)
+  
+  ! rossby radius index  = Lr / (10 x dx) 
+  rossby_radius_index = rossby_radius/(sqrt(column_area)*6)
+
+end subroutine gw_rossby_radius
 
 !==========================================================================
 subroutine gw_cm_src(ncol, ngwv, kbot, u, v, frontgf, &

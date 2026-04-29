@@ -647,7 +647,7 @@ subroutine gw_tend(state, sgh, pbuf, dt, ptend, cam_in)
   use gw_common,  only: gw_prof, momentum_energy_conservation, &
        gw_drag_prof
   use gw_oro,     only: gw_oro_src
-  use gw_front,   only: gw_cm_src
+  use gw_front,   only: gw_cm_src, gw_rossby_radius
   use gw_convect, only: gw_beres_src
   use dycore,     only: dycore_is
   use phys_grid,  only: get_rlat_all_p
@@ -731,6 +731,11 @@ subroutine gw_tend(state, sgh, pbuf, dt, ptend, cam_in)
   ! Frontogenesis
   real(r8), pointer :: frontgf(:,:)
   real(r8), pointer :: frontga(:,:)
+
+  ! Rossby radius index (Lr/dx)
+  real(r8) :: rossby_radius_index(state%ncol)
+  ! 
+  real(r8) :: effgw_cm_var(state%ncol)
 
   ! Temperature change due to deep convection.
   real(r8), pointer, dimension(:,:) :: ttend_dp
@@ -917,12 +922,24 @@ subroutine gw_tend(state, sgh, pbuf, dt, ptend, cam_in)
           do_latitude_taper = .true.
         end if
 
+        ! Calculate the effgw_cm as a function of the Rossby Radius and dx of each column, added by Wandi Yu and Walter Hannah
+        call gw_rossby_radius(ncol, state1%lat(:ncol),state1%lchnk,&
+                rossby_radius_index)
+        effgw_cm_var = effgw_cm
+        where (rossby_radius_index>1)
+            effgw_cm_var = effgw_cm/rossby_radius_index
+        end where
+          
+          write(iulog,*) "wytest: lat", state1%lat(:ncol)
+          write(iulog,*) "wytest: effgw_cm_var", effgw_cm_var
+          write(iulog,*) "rossby radius index", rossby_radius_index
+
         ! Solve for the drag profile with C&M source spectrum.
         call gw_drag_prof(ncol, pgwv, src_level, tend_level, do_latitude_taper, dt, &
              state1%lat(:ncol), t,    ti, pmid, pint, dpm,   rdpm, &
              piln, rhoi,       nm,   ni, ubm,  ubi,  xv,    yv,   &
              effgw_cm,    c,   kvtt, q,  dse,  tau,  utgw,  vtgw, &
-             ttgw, qtgw,  taucd,     egwdffi,  gwut, dttdf, dttke)
+             ttgw, qtgw,  taucd,     egwdffi,  gwut, dttdf, dttke, effgw_cm_var)
 
         !  add the diffusion coefficients
         do k = 0, pver

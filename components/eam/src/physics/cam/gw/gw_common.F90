@@ -554,7 +554,7 @@ end subroutine gwd_project_tau
 !==========================================================================
 
 subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, dt, effgw, tend_level, &
-     lat, dpm, rdpm, c, ubm, t, nm, xv, yv, tau, gwut, utgw, vtgw)
+     lat, dpm, rdpm, c, ubm, t, nm, xv, yv, tau, gwut, utgw, vtgw, effgw_in)
 
   !------------------------------Arguments--------------------------------
   ! Column and gravity wave spectrum dimensions.
@@ -585,6 +585,9 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
   ! Unit vectors of source wind (zonal and meridional components).
   real(r8), intent(in) :: xv(ncol), yv(ncol)
 
+  ! Tunable parameter factors 
+  real(r8), intent(in), optional :: effgw_in(ncol) ! effgw as a function of col
+
   ! Wave Reynolds stress.
   real(r8), intent(inout) :: tau(ncol,-pgwv:pgwv,0:pver)
 
@@ -602,6 +605,18 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
   ! Polar taper.
   real(r8) :: ptaper(ncol)
 
+ ! gw efficiency in each column 
+  real(r8) :: effgw_col(ncol)
+
+  !------------------------------------------------------------------------
+  ! Tunable parameters
+  !  override default values if value is present
+  if (present(effgw_in)) then
+      effgw_col = effgw_in
+  else
+      effgw_col = effgw
+  endif
+  
   if (do_taper) then    ! taper CM only
      do l=1, ncol
         ptaper(l) = bfb_cos(lat(l))
@@ -645,7 +660,7 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
 
            ! Save tendency for each wave (for later computation of kzz),
            ! applying efficiency and taper:
-           gwut(:,k,l) = sign(ubtl, c(:,l)-ubm(:,k)) * effgw * ptaper
+           gwut(:,k,l) = sign(ubtl, c(:,l)-ubm(:,k)) * effgw_col * ptaper
 
         end where
 
@@ -681,8 +696,8 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
         end where
      else
         where (k <= tend_level)
-           utgw(:,k) = ubt(:,k) * xv * effgw * ptaper
-           vtgw(:,k) = ubt(:,k) * yv * effgw * ptaper
+           utgw(:,k) = ubt(:,k) * xv * effgw_col * ptaper
+           vtgw(:,k) = ubt(:,k) * yv * effgw_col * ptaper
         end where
      end if
 
@@ -791,7 +806,7 @@ subroutine gw_drag_prof(ncol, ngwv, src_level, tend_level, do_taper, dt, &
      lat,           t,    ti,  pmid, pint, dpm,   rdpm, &
      piln, rhoi,    nm,   ni,  ubm,  ubi,  xv,    yv,   &
      effgw,      c, kvtt, q,   dse,  tau,  utgw,  vtgw, &
-     ttgw, qtgw, taucd,   egwdffi,   gwut, dttdf, dttke)
+     ttgw, qtgw, taucd,   egwdffi,   gwut, dttdf, dttke, effgw_in)
 
   !-----------------------------------------------------------------------
   ! Solve for the drag profile from the multiple gravity wave drag
@@ -848,7 +863,10 @@ subroutine gw_drag_prof(ncol, ngwv, src_level, tend_level, do_taper, dt, &
   real(r8), intent(in) :: q(:,:,:)
   ! Dry static energy.
   real(r8), intent(in) :: dse(ncol,pver)
-
+  
+  ! Tunable parameter factors 
+  real(r8), intent(in), optional :: effgw_in(ncol) ! effgw as a function of col
+  
   ! Wave Reynolds stress.
   real(r8), intent(inout) :: tau(ncol,-pgwv:pgwv,0:pver)
   ! Zonal/meridional wind tendencies.
@@ -897,7 +915,7 @@ subroutine gw_drag_prof(ncol, ngwv, src_level, tend_level, do_taper, dt, &
   ! Compute the tendencies from the stress divergence.
   !------------------------------------------------------------------------
   call gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, dt, effgw, tend_level, &
-       lat, dpm, rdpm, c, ubm, t, nm, xv, yv, tau, gwut, utgw, vtgw)
+       lat, dpm, rdpm, c, ubm, t, nm, xv, yv, tau, gwut, utgw, vtgw, effgw_in)
 
   if (ngwv > 0) then
 
