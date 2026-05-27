@@ -211,7 +211,7 @@ subroutine gw_rossby_radius(ncol, lat, lchnk, &
 
   rossby_radius = sqrt(gravit*rossby_depth)/abs(f)
   
-  ! rossby radius index  = Lr / (10 x dx) 
+  ! rossby radius index  = Lr / (6 x dx) 
   rossby_radius_index = rossby_radius/(sqrt(column_area)*6)
 
 end subroutine gw_rossby_radius
