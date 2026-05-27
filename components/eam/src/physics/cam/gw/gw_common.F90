@@ -556,6 +556,8 @@ end subroutine gwd_project_tau
 subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, dt, effgw, tend_level, &
      lat, dpm, rdpm, c, ubm, t, nm, xv, yv, tau, gwut, utgw, vtgw, effgw_in)
 
+  use cam_logfile,   only: iulog
+
   !------------------------------Arguments--------------------------------
   ! Column and gravity wave spectrum dimensions.
   integer, intent(in) :: ncol, ngwv
@@ -657,7 +659,7 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
         ubtl = min(ubtl, tndmax)
 
         where (k <= tend_level)
-
+        
            ! Save tendency for each wave (for later computation of kzz),
            ! applying efficiency and taper:
            gwut(:,k,l) = sign(ubtl, c(:,l)-ubm(:,k)) * effgw_col * ptaper
@@ -674,6 +676,13 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
            end where
         end if
 
+        ! Protection on SMALL gwut to prevent floating point
+        ! issues.
+        !--------------------------------------------------
+        where( abs(gwut(:,k,l)) < 1.e-15_r8 )
+           gwut(:,k,l) = 0._r8
+        end where
+        
         where (k <= tend_level)
 
            ! Redetermine the effective stress on the interface below from
@@ -682,8 +691,8 @@ subroutine gwd_compute_tendencies_from_stress_divergence(ncol, ngwv, do_taper, d
            ! causing stress divergence in the next layer down. This
            ! smoothes large stress divergences downward while conserving
            ! total stress.
-           tau(:,l,k) = tau(:,l,k-1) + ubtl * dpm(:,k) / gravit
-
+           tau(:,l,k) = tau(:,l,k-1) + abs(gwut(:,k,l)) * dpm(:,k) / gravit
+            !tau(:,l,k) = tau(:,l,k-1) + ubtl * dpm(:,k) / gravit
         end where
 
      end do
