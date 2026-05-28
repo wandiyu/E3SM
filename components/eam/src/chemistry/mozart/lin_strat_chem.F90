@@ -704,7 +704,7 @@ end subroutine linoz_readnl
     use linoz_data,  only : fields, o3_clim_ndx, n2o_clim_ndx, noy_clim_ndx, ch4_clim_ndx, h2o_clim_ndx, t_clim_ndx,o3col_clim_ndx,&
          no3_PmL_clim_ndx,  no3_dPmL_dO3_ndx,   no3_dPmL_dN2O_ndx, no3_dPmL_dNOy_ndx,   &
          no3_dPmL_dCH4_ndx, no3_dPmL_dH2O_ndx,  no3_dPmL_dT_ndx,   no3_dPmL_dO3col_ndx, &
-         cariolle_pscs_ndx
+         cariolle_pscs_ndx, o3_qboi_fixed_ndx
     !
     ! dummy arguments
     !
@@ -739,6 +739,8 @@ end subroutine linoz_readnl
     real(r8), dimension(:,:), pointer :: linoz_dPmL_dT
     real(r8), dimension(:,:), pointer :: linoz_dPmL_dO3col
     real(r8), dimension(:,:), pointer :: linoz_cariolle_psc
+    real(r8), dimension(:,:), pointer :: linoz_o3_qboi_fixed
+
     ! real O3 variables
     real(r8), dimension(ncol,pver) :: do3_linoz_du, do3_linoz_psc_du
     real(r8), dimension(ncol) :: twod_do3_linoz
@@ -780,6 +782,8 @@ end subroutine linoz_readnl
     linoz_dPmL_dT      => fields(no3_dPmL_dT_ndx)     %data(:,:,lchnk )
     linoz_dPmL_dO3col  => fields(no3_dPmL_dO3col_ndx) %data(:,:,lchnk )
     linoz_cariolle_psc => fields(cariolle_pscs_ndx)   %data(:,:,lchnk )
+    linoz_o3_qboi_fixed=> fields(o3_qboi_fixed_ndx)   %data(:,:,lchnk ) 
+
     !
     ! initialize output arrays
     !
