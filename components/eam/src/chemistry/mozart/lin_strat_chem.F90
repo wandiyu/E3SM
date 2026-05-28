@@ -269,7 +269,7 @@ end subroutine linoz_readnl
                               nch4_PmL_clim_ndx, nch4_dPmL_dO3_ndx,  nch4_dPmL_dN2O_ndx,nch4_dPmL_dNOy_ndx,  &
                               nch4_dPmL_dCH4_ndx,nch4_dPmL_dH2O_ndx, nch4_dPmL_dT_ndx,  nch4_dPmL_dO3col_ndx,&
                               cariolle_pscs_ndx, o3lbs_ndx,o3_clim_srf_ndx,n2o_clim_srf_ndx,noy_clim_srf_ndx,&
-                              ch4_clim_srf_ndx,  ch4_avg_srf_ndx
+                              ch4_clim_srf_ndx,  ch4_avg_srf_ndx,o3_qboi_fixed_ndx
     !
     integer,  intent(in)                           :: ncol                ! number of columns in chunk
     integer,  intent(in)                           :: lchnk               ! chunk index
@@ -318,6 +318,7 @@ end subroutine linoz_readnl
     real(r8), dimension(:,:), pointer :: linoz_dPmL_dT
     real(r8), dimension(:,:), pointer :: linoz_dPmL_dO3col
     real(r8), dimension(:,:), pointer :: linoz_cariolle_psc
+    real(r8), dimension(:,:), pointer :: linoz_o3_qboi_fixed
     real(r8), dimension(:,:), pointer :: linoz_o3lbs
     real(r8), dimension(:,:), pointer :: linoz_o3_clim_srf
     real(r8), dimension(:,:), pointer :: linoz_n2o_clim_srf
@@ -507,7 +508,7 @@ end subroutine linoz_readnl
             +  linoz_dPmL_dO3col(:ncol,:)* dCOL
  
        linoz_cariolle_psc => fields(cariolle_pscs_ndx)%data(:,:,lchnk )
-    
+      linoz_o3_qboi_fixed=> fields(o3_qboi_fixed_ndx)%data(:,:,lchnk ) 
        ! initialize output arrays
        !
        do3_linoz         = 0._r8
@@ -618,14 +619,16 @@ end subroutine linoz_readnl
           ! update vmr
           ! as a defense the assignments are only performed when the species are active. Otherwise the  
           ! index would be an invalid value (-1)
-           if (o3lnz_ndx > 0) xvmr(i,k,  o3lnz_ndx) =   o3_new
+          ! if (o3lnz_ndx > 0) xvmr(i,k,  o3lnz_ndx) =   o3_new
+           xvmr(i,k,  o3lnz_ndx) =   linoz_o3_qboi_fixed(i,k)
+           
            if (n2olnz_ndx > 0) xvmr(i,k, n2olnz_ndx)   = n2o_new
            if (noylnz_ndx > 0) xvmr(i,k, noylnz_ndx)   = noy_new
            if (ch4lnz_ndx > 0) xvmr(i,k, ch4lnz_ndx)   = ch4_new
            if (h2olnz_ndx > 0) xvmr(i,k, h2olnz_ndx)   = h2o_new
 
           !update real o3, ch4, n2o      
-           if(o3_ndx  > 0) xvmr(i,k, o3_ndx ) =  delo3   + delo3_psc +  xvmr(i,k, o3_ndx )
+!           if(o3_ndx  > 0) xvmr(i,k, o3_ndx ) =  delo3   + delo3_psc +  xvmr(i,k, o3_ndx )
            if(ch4_ndx > 0) xvmr(i,k, ch4_ndx) =  delch4  +  xvmr(i,k, ch4_ndx)
            if(n2o_ndx > 0) xvmr(i,k, n2o_ndx) =  (dn2op + dn2ol)  +  xvmr(i,k, n2o_ndx)
            if(no_ndx >0)  xvmr(i,k, no_ndx)   =  0.05 *(dnoyp + dnoyl) + xvmr(i,k, no_ndx)
@@ -648,7 +651,8 @@ end subroutine linoz_readnl
         endif
         
      end do LOOP_COL
-!    save the passed-in o3col for all layers rather than just the stratosphere
+     write(iulog,*) 'Set ozone for linoz_mam: o3_qboi_fixed_ndx =',o3_qboi_fixed_ndx
+     !    save the passed-in o3col for all layers rather than just the stratosphere
      o3col_du_diag(:ncol,:pver) = o3col(:ncol,:pver) * convert_to_du
      do3_linoz_du(:ncol,:) = pdeldry(:ncol,:)*do3_linoz(:ncol,:)*avogadro*rgrav/mw_air*convert_to_du*1.e3_r8
      do3_linoz_psc_du(:ncol,:) = pdeldry(:ncol,:)*do3_linoz_psc(:ncol,:)*avogadro*rgrav/mw_air*convert_to_du*1.e3_r8
@@ -900,10 +904,11 @@ end subroutine linoz_readnl
           ! update ozone vmr
           !
           !xvmr(i,k, o3lnz_ndx) = o3_new
-          if(o3_ndx >0) xvmr(i,k, o3_ndx) = delta_o3 + delta_o3_psc + xvmr(i,k, o3_ndx)
-          
+          !if(o3_ndx >0) xvmr(i,k, o3_ndx) = delta_o3 + delta_o3_psc + xvmr(i,k, o3_ndx)
+          xvmr(i,k, o3_ndx) = linoz_o3_qboi_fixed(i,k)
        end do LOOP_LEV
     end do LOOP_COL
+    write(iulog,*) 'Set ozone for linoz_mam: o3_qboi_fixed_ndx =',o3_qboi_fixed_ndx
     o3col_du_diag(:ncol,:pver) = o3col(:ncol,:pver) * convert_to_du
     do3_linoz_du(:ncol,:) = pdeldry(:ncol,:)*do3_linoz(:ncol,:)*avogadro*rgrav/mw_air*convert_to_du*1.e3_r8
     do3_linoz_psc_du(:ncol,:) = pdeldry(:ncol,:)*do3_linoz_psc(:ncol,:)*avogadro*rgrav/mw_air*convert_to_du*1.e3_r8

@@ -28,6 +28,7 @@ module mo_gas_phase_chemdr
   integer :: o3_ndx, synoz_ndx, so4_ndx, h2o_ndx, o2_ndx, o_ndx, hno3_ndx, dst_ndx, cldice_ndx, e90_ndx
   !integer :: o3lnz_ndx, n2olnz_ndx, noylnz_ndx, ch4lnz_ndx
   integer :: o3lnz_ndx, ch4lnz_ndx
+  integer :: inv_ndx_o3_qboi_fixed
   integer :: uci1_ndx
   integer :: het1_ndx
   integer :: ndx_cldfr, ndx_cmfdqr, ndx_nevapr, ndx_cldtop, ndx_prain, ndx_sadsulf
@@ -230,7 +231,8 @@ contains
 !-----------------------------------------------------------------------
 ! get fixed oxidant (troposphere) index for Linoz_MAM
 !-----------------------------------------------------------------------
-   
+  
+     inv_ndx_o3_qboi_fixed=get_inv_ndx('O3_qboi_fixed')
      inv_ndx_cnst_o3 = get_inv_ndx( 'cnst_O3' ) ! prescribed O3 oxidant field
      inv_ndx_m       = get_inv_ndx( 'M' )        ! airmass.  Elsewhere this variable is known as m_ndx
      inv_ndx_cnst_no3       = get_inv_ndx( 'prsd_NO3' )

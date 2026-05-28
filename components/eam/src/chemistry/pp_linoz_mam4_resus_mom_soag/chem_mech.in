@@ -24,7 +24,7 @@
       End Solution
 
       Fixed
- M, N2, O2, H2O, OH, NO3, HO2, cnst_O3 -> O3
+ M, N2, O2, H2O, OH, NO3, HO2, cnst_O3 -> O3, O3_qboi_fixed
       End Fixed
 
       Col-int
