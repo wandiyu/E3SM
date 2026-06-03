@@ -232,7 +232,7 @@ contains
 ! get fixed oxidant (troposphere) index for Linoz_MAM
 !-----------------------------------------------------------------------
   
-     inv_ndx_o3_qboi_fixed=get_inv_ndx('O3_qboi_fixed')
+     inv_ndx_o3_qboi_fixed=get_inv_ndx('o3_qboi_fixed')
      inv_ndx_cnst_o3 = get_inv_ndx( 'cnst_O3' ) ! prescribed O3 oxidant field
      inv_ndx_m       = get_inv_ndx( 'M' )        ! airmass.  Elsewhere this variable is known as m_ndx
      inv_ndx_cnst_no3       = get_inv_ndx( 'prsd_NO3' )
