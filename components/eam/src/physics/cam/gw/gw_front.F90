@@ -194,7 +194,9 @@ subroutine gw_rossby_radius(ncol, lat, lchnk, &
   integer :: i
   
  ! depth to calculate the Rossby Radius    
-  real(r8), parameter :: rossby_depth   = 2.0e3_r8
+  real(r8), parameter :: rossby_depth   = 8.5e3_r8
+  ! Brunt–Väisälä frequency in troposphere
+  real(r8), parameter :: N = 0.01_r8
   ! coriolis parameter
   real(r8) :: f(ncol)
   !column area 
@@ -209,8 +211,9 @@ subroutine gw_rossby_radius(ncol, lat, lchnk, &
   
   f = 2 * omega * sin(lat)  ! lat is in radian 
 
-  rossby_radius = sqrt(gravit*rossby_depth)/abs(f)
-  
+  ! rossby_radius = NH/abs(f)
+  rossby_radius = N*rossby_depth/abs(f) 
+
   ! rossby radius index  = Lr / (6 x dx) 
   rossby_radius_index = rossby_radius/(sqrt(column_area)*6)
 
